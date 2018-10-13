@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Future VCF benchmarking</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <section>
+        <h2>Future VCF formats benchmarking</h2>
+        <div style="margin-top:-1em">Last update: 2018-10-13</div>
+      </section>
+
+      <section>
+        <h3>Real WES data (GATK calls), 38k samples, 236k sites (chr20), 30GB</h3>
+        <table>
+        <tr><th>method<th>lossy<th>compressed size (*)<th>CPU time [s]<th>memory [MB]</tr>
+        <tr><td><a href="#tachyon">tachyon</a><td>-<td>78.1%<td>8744<td>12611 (&dagger;)</tr>
+        <tr><td><a href="#spVCF">spVCF</a><td>-<td>58.2%<td>14990<td>7613</tr>
+        <tr><td><a href="#spVCF">spVCF (lossy)</a><td>x<td>7.8%<td>10888<td>5724</tr>
+        </table>
+
+        <br>
+
+        <h3>Randomized, 50k samples, 100k sites, 15GB <a style="font-weight:bold" href="ftp://ngs.sanger.ac.uk/scratch/project/team145/pd3/future-vcf/">(ftp)</a></h3>
+        <table>
+        <tr><th>method<th>lossy<th>compressed size (*)<th>CPU time [s]<th>memory [MB]</tr>
+        <tr><td><a href="#tachyon">tachyon</a><td>-<td>82.4%<td>10516<td>6072 (&dagger;)</tr>
+        <tr><td><a href="#spVCF">spVCF</a><td>-<td>100.1%<td>14589<td>4146</tr>
+        <tr><td><a href="#spVCF">spVCF (lossy)</a><td>x<td>14.5%<td>4987<td>2787</tr>
+        </table>
+
+        <br> (*) The percentage of original size
+        <br> (&dagger;) Can be customized by adjusting -c
+      </section>
+
+      <section name="tachyon" style="margin-top:4em">
+        <b><a href="https://github.com/mklarqvist/tachyon">Tachyon</a></b> (version 0.5.0)
+        <div style="margin-left:1em;">
+            tachyon import -i $in -o $out -c 2000
+        </div>
+      </section>
+
+      <section name="spVCF" style="margin-top:1em">
+        <b><a href="https://github.com/mlin/spVCF">spVCF</a></b> (version v0.5.0-0-g4b9e325)
+        <div style="margin-left:1em;">
+            pigz -dc $in | spvcf encode           --threads 8 | bgzip -c --threads 8 > $out <br>
+            pigz -dc $in | spvcf encode --squeeze --threads 8 | bgzip -c --threads 8 > $out
+        </div>
+        <div style="margin-top:0.8em;margin-left:1em;font-style:italic">
+            spVCF extends VCF by using a sparse encoding for the SITES x SAMPLES genotype matrix.
+            Its lossless encoding is based on the expectation of identical QC values at nearby sites
+            for a given sample.  With the parameter --squeeze, the format is lossy. In this
+            mode, it suppresses fields other than genotype GT and read depth DP from cells with
+            zero alternate reference reads in AD, also DP is rounded down to a power of two in these cells.
+        </div>
+      </section>
+
+      <footer>
+        <p>contact: <a href="https://github.com/pd3">Petr Danecek</a></p>
+      </footer>
+
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
